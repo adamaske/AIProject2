@@ -47,6 +47,7 @@ std::vector<float> Network::Output(std::vector<float> input)
 std::vector<float> Network::Output(std::vector<float> input, std::vector<float> correctOutput)
 {
 	//Gets the output
+	
 	std::vector<float> output = Output(input);
 
 	//Vector to store the costs
@@ -57,21 +58,17 @@ std::vector<float> Network::Output(std::vector<float> input, std::vector<float> 
 
 		std::cout << "Output : " << output[i] << " : ";
 		//Find costs
-		costs.push_back( 2* pow(output[i] - correctOutput[i], 2.f));
+		costs.push_back(2*  pow(output[i] - correctOutput[i], 2.f));
 		std::cout << " Cost : " << costs[i] << "\n";
 	}
 	std::cout << "\n";
 
-	//for (int i = 0; i < mLayers.size(); i++) {
-	//	mLayers[i]->PrintLayer();
-	//	
-	//}
 	auto lay = mLayers[mLayers.size() - 1];
 	//Each node of the last layer should be propped
 	for (int i = 0; i < lay->mNodes; i++)
 	{
 		//Find error in acitbaton
-		float error = 2* pow(lay->mOutputs[i] - correctOutput[i], 2.f);
+		float error =  pow(output[i] - correctOutput[i], 2.f);
 		lay->mProps.push_back(error);
 	}
 	//GO backwards through each layer
@@ -85,22 +82,25 @@ std::vector<float> Network::Output(std::vector<float> input, std::vector<float> 
 
 				//this is how sensitive the cost is to this weight
 				// C / weight  =		
-				auto wgradient = mLayers[layer - 1]->mActivations[con] * mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * mLayers[layer]->mProps[con];//a(0), the weight effects the z by the activation of the previous node	
+				auto wgradient = mLayers[layer - 1]->mActivations[con] * mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * mLayers[layer]->mProps[con];
+				mLayers[layer]->mWeights[weight] -= 0.5f * wgradient;
+				//a(0), the weight effects the z by the activation of the previous node	
 					 //sigmoid'(z(-1)) * 2(a(-1) - Y)	
 					 // *2(a(l) - Y)
 
-				//std::cout << "Starting debug for w gradient: \n";
-				//
-				//std::cout << "z/w : " << mLayers[layer - 1]->mActivations[con] << "\n";
-				//
-				//std::cout << "a/z : " << mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) << "\n";
-				//
-				//std::cout << "c/a : " << mLayers[layer]->mProps[con] << "\n";
-				//
-				//std::cout << "c/w : " << wgradient << "\n";
-				mLayers[layer]->mWeights[weight] -= 0.1 * wgradient;
+				std::cout << "Starting debug for w gradient: \n";
+				
+				std::cout << "z/w : " << mLayers[layer - 1]->mActivations[con] << "\n";
+				
+				std::cout << "a/z : " << mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) << "\n";
+				
+				std::cout << "c/a : " << mLayers[layer]->mProps[con] << "\n";
+				
+				std::cout << "c/w : " << wgradient << "\n";
+				std::cout << "W " << mLayers[layer]->mWeights[weight] << " * " <<
+				wgradient << "\n";
 
-
+				
 				//This is how sensitive the cost function to the activation of the previous lay
 				// c/a(l-1) =			w(l-1)				*						sigmoid'(z(l))										*  2(a(l) - Y)/ c / a(l-1)
 				//the previous layer should inheret this
@@ -112,7 +112,7 @@ std::vector<float> Network::Output(std::vector<float> input, std::vector<float> 
 			
 
 			auto bgradient = 0;
-			mLayers[layer]->mBiases[node] += -0.1f * mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * mLayers[layer]->mProps[node];
+			mLayers[layer]->mBiases[node] += -0.01f * mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * mLayers[layer]->mProps[node];
 		}
 		//apply gradients
 	}

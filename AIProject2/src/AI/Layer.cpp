@@ -7,7 +7,7 @@ Layer::Layer() : mNodes(0), mConnections(0)
 
 Layer::Layer(int nodes, int connections) : mNodes(nodes), mConnections(connections)
 {
-
+	
 }
 
 std::vector<float> Layer::Output(std::vector<float> input) 
@@ -60,7 +60,7 @@ void Layer::PopulateRandom()
 		mBiases.push_back(rand() % 10);
 	}
 	mWeights.clear();
-
+	
 	for (auto i = 0; i < mNodes * mConnections; i++)
 	{
 		mWeights.push_back((rand() % 100) / 100.f);
@@ -90,5 +90,5 @@ void Layer::PrintLayer()
 
 		std::cout << "\n";
 	}
-	std::cout << "\n\n";
+	std::cout << "\n";
 }
