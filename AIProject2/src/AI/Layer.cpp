@@ -7,11 +7,19 @@ Layer::Layer() : mNodes(0), mConnections(0)
 
 Layer::Layer(int nodes, int connections) : mNodes(nodes), mConnections(connections)
 {
-	
+	for (int i = 0; i < nodes; i++)
+	{
+		mProps.push_back(0);
+	}
 }
 
 std::vector<float> Layer::Output(std::vector<float> input) 
 {
+	std::cout << "Layer got input : ";
+	for (int i = 0; i < input.size(); i++) {
+		std::cout << input[i] << ", ";
+	}
+
 	//Connections and input should correspond
 	mActivations.clear();
 	//A vector for the activations
@@ -24,7 +32,7 @@ std::vector<float> Layer::Output(std::vector<float> input)
 		for (int connection = 0; connection < mConnections; connection++) {
 			//We want to add the a(1) = w0,0 + a(0)0... wN,N 0 a(n)n - b(N) 
 			//input[node] is the activation
-			float weightActivation = input[connection] * mWeights[(node * mConnections) + connection];
+			float weightActivation = input[connection] * mWeights[(node * connection) + connection];
 			activationSum += weightActivation;
 		}
 		//Subtract the bias for the node
@@ -38,11 +46,8 @@ std::vector<float> Layer::Output(std::vector<float> input)
 		}
 	
 	mOutputs = activations;
-	std::cout << "Layer got input : ";
-	for (int i = 0; i < input.size(); i++) {
-		std::cout << input[i] << ", ";
-	}
-	std::cout << "\nLayer sent Output : " << mOutputs.size() << "\n";
+	
+	std::cout << "\nLayer sent Output : " << mOutputs.size();
 	for (int i = 0; i < mOutputs.size(); i++) {
 		std::cout << mOutputs[i] << ", ";
 	}
@@ -75,7 +80,7 @@ float Layer::Sigmoid(float sum)
 
 float Layer::SigmoidDerivative(float sum)
 {
-	return Sigmoid(sum) * ( 1 - Sigmoid(sum));
+	return sum * ( 1 - sum);
 }
 
 void Layer::PrintLayer()
@@ -87,8 +92,9 @@ void Layer::PrintLayer()
 		{
 			std::cout << "W : " << mWeights[(i * j) + j] << ", ";
 		}
-
+		std::cout << "Bias : " << mBiases[i];
 		std::cout << "\n";
+
 	}
 	std::cout << "\n";
 }

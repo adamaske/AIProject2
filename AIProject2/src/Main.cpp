@@ -7,11 +7,10 @@
 int main() {
 	srand(time(0));
 	std::vector<Layer*> layers;
+	layers.push_back(new Layer(5,2));
 	layers.push_back(new Layer(5, 5));
-	//layers.push_back(new Layer(5, 5));
-	//layers.push_back(new Layer(5, 5));
-	//layers.push_back(new Layer(5, 5));
-	//layers.push_back(new Layer(5, 5));
+	layers.push_back(new Layer(5, 5));
+	layers.push_back(new Layer(5, 5));
 	layers.push_back(new Layer(2, 2));
 
 	Network* network = new Network();
@@ -20,8 +19,8 @@ int main() {
 	network->PrintNetwork();
 
 	std::vector<std::vector<float>> results;
-	for (int i = 0; i < 300; i++) {
-		auto r = network->Output({(rand() % 10) / 10.f, (rand() % 10) / 10.f , (rand() % 10) / 10.f, (rand() % 10) / 10.f , (rand() % 10) / 10.f }, {0.2, 0.3});
+	for (int i = 0; i < 50; i++) {
+		auto r = network->Output({(rand() % 10) / 10.f, (rand() % 10) / 10.f }, {0.2, 0.3});
 		results.push_back(r);
 		network->PrintNetwork();
 	}

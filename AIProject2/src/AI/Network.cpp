@@ -52,67 +52,53 @@ std::vector<float> Network::Output(std::vector<float> input, std::vector<float> 
 
 	//Vector to store the costs
 	std::vector<float> costs;
-
+	float totalCost = 0;
 	std::cout << "Output : " << output.size() << "\n";
 	for (int i = 0; i < output.size(); i++) {
 
 		std::cout << "Output : " << output[i] << " : ";
 		//Find costs
 		costs.push_back(2*  pow(output[i] - correctOutput[i], 2.f));
+		totalCost += costs[i];
 		std::cout << " Cost : " << costs[i] << "\n";
 	}
-	std::cout << "\n";
-
-	auto lay = mLayers[mLayers.size() - 1];
-	//Each node of the last layer should be propped
-	for (int i = 0; i < lay->mNodes; i++)
-	{
-		//Find error in acitbaton
-		float error =  pow(output[i] - correctOutput[i], 2.f);
-		lay->mProps.push_back(error);
-	}
+	float learn = 0.1f;
 	//GO backwards through each layer
-	for (int layer = mLayers.size()-1; layer > 0; layer--) {
-		mLayers[layer - 1]->mProps.clear(); 
-		mLayers[layer - 1]->mProps.reserve(mLayers[layer]->mConnections);
+	for (int layer = mLayers.size()-2; layer > 0; layer--) {
+		//every node in the layer
 		for (int node = 0; node < mLayers[layer]->mNodes; node++) {
+			//every weight in the layer
 			for (int con = 0; con < mLayers[layer]->mConnections; con++) {
 				//weight index
 				float weight = (node * con) + con;
-
 				//this is how sensitive the cost is to this weight
-				// C / weight  =		
-				auto wgradient = mLayers[layer - 1]->mActivations[con] * mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * mLayers[layer]->mProps[con];
-				mLayers[layer]->mWeights[weight] -= 0.5f * wgradient;
+				//Chain rule: dC / dw_j_k = z / w * a/z * c/a
+				auto wgradient = mLayers[layer - 1]->mActivations[con] * 
+					mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * 
+					mLayers[layer + 1]->mProps[con];
+			
+				mLayers[layer]->mWeights[weight] -= learn * wgradient;
+				
+				//Every node behind this layer is represented in mLayers[layer-1]
+				//To obtain the sensitivty 
 				//a(0), the weight effects the z by the activation of the previous node	
 					 //sigmoid'(z(-1)) * 2(a(-1) - Y)	
 					 // *2(a(l) - Y)
-
-				std::cout << "Starting debug for w gradient: \n";
-				
-				std::cout << "z/w : " << mLayers[layer - 1]->mActivations[con] << "\n";
-				
-				std::cout << "a/z : " << mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) << "\n";
-				
-				std::cout << "c/a : " << mLayers[layer]->mProps[con] << "\n";
-				
-				std::cout << "c/w : " << wgradient << "\n";
-				std::cout << "W " << mLayers[layer]->mWeights[weight] << " * " <<
-				wgradient << "\n";
-
-				
 				//This is how sensitive the cost function to the activation of the previous lay
-				// c/a(l-1) =			w(l-1)				*						sigmoid'(z(l))										*  2(a(l) - Y)/ c / a(l-1)
+				// c/a(l-1) =	w(l-1) *	sigmoid'(z(l)) *  2(a(l) - Y)/ c / a(l-1)
 				//the previous layer should inheret this
 				//each node in this layer, has one connection to each node in layer behind
 				//if we are on the first node in this layer, go thorugh 0-4 con in the props 
-				mLayers[layer-1]->mProps[con] += mLayers[layer]->mWeights[weight] * mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * mLayers[layer]->mProps[node];
-				
+				//c / a(l-1) = z / a(l-1) * a/z * c/ a 
+				mLayers[layer-1]->mProps[con] += mLayers[layer]->mWeights[weight] * 
+					mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * 
+					mLayers[layer]->mProps[node];
 			}
-			
+			// I want a sum of all the wrong firings of for these nodes
 
-			auto bgradient = 0;
-			mLayers[layer]->mBiases[node] += -0.01f * mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * mLayers[layer]->mProps[node];
+
+			auto bgradient = mLayers[layer]->SigmoidDerivative(mLayers[layer]->mActivations[node]) * mLayers[layer]->mProps[node];
+			mLayers[layer]->mBiases[node] -= learn * bgradient;
 		}
 		//apply gradients
 	}
